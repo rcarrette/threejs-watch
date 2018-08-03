@@ -1,0 +1,22 @@
+{
+  "name": "threejs-watch",
+  "version": "1.0.0",
+  "description": "**Simple project for personal technical training purposes.**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcarrette/threejs-watch.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rcarrette/threejs-watch/issues"
+  },
+  "homepage": "https://github.com/rcarrette/threejs-watch#readme",
+  "dependencies": {
+    "three": "^0.95.0"
+  }
+}
