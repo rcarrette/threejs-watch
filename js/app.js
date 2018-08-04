@@ -1,35 +1,74 @@
 var THREE = require('three')
-var scene = new THREE.Scene()
+var OrbitControls = require('three-orbit-controls')(THREE)
+
+var scene = new THREE.Scene(0x2a2a2a)
+
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000)
+camera.position.z = 10
+
+var renderer = new THREE.WebGLRenderer()
+
+renderer.setSize(window.innerWidth, window.innerHeight)
+document.body.appendChild(renderer.domElement)
+
+new OrbitControls(camera, renderer.domElement)
+
+//TODO refacto
+const createLights = () => {
+    var ambientLight = new THREE.AmbientLight(0x0)
+    scene.add(ambientLight)
+
+    var pointLightFront = new THREE.PointLight(0xffffff, 1, 0),
+        pointLightBack = new THREE.PointLight(0xffffff, 1, 0)
+
+    pointLightFront.position.set(0, 0, 7)
+    pointLightBack.position.set(0, 0, -pointLightFront.position.z)
+
+    scene.add(pointLightFront)
+    scene.add(pointLightBack)
+
+    // scene.add(new THREE.PointLightHelper(pointLightFront, 1))
+    // scene.add(new THREE.PointLightHelper(pointLightBack, 1))
+}
 
 const createClock = () => {
-    var geometry = new THREE.CircleGeometry(5, 32)
+    var geometry = new THREE.CircleGeometry(5, 128)
 
     var material = new THREE.MeshPhongMaterial({
-        color: 'lightgrey',
-        specular: 0x555555,
-        shininess: 100
+        color: 0x222222,
+        emissive: 0x0,
+        specular: 0xd101e,
+        shininess: 60,
+        side: THREE.DoubleSide
     })
 
     var clock = new THREE.Mesh(geometry, material)
 
     scene.add(clock)
-
-    return clock
 }
 
 const createHand = (length, color) => {
-    var handGeometry = new THREE.Geometry()
+    var handGeometry = new THREE.ConeBufferGeometry(0.1, length, 32)
 
-    handGeometry.vertices.push(new THREE.Vector3(0, length, 0))
-    handGeometry.vertices.push(new THREE.Vector3(0, 0, 0))
-    
-    var handMaterial = new THREE.LineBasicMaterial({
+    var handMaterial = new THREE.MeshPhongMaterial({
         color: color
     })
-    
-    var hand = new THREE.Line(handGeometry, handMaterial)
-    
+
+    var hand = new THREE.Mesh(handGeometry, handMaterial)
+
+    hand.position.y = length / 2    //put hand's bottom at clock's center
+    hand.position.z += 0.1  //avoid hands collision with the clock
+
     scene.add(hand)
+
+    //create a pivot to make the hand rotate from the scene's origin (clock's center), and not from its own center.
+    var handPivot = new THREE.Group()
+
+    handPivot.add(hand)
+
+    scene.add(handPivot)
+
+    hand.pivot = handPivot
 
     return hand
 }
@@ -40,21 +79,13 @@ const createHourMarkers = () => {
     var material = new THREE.MeshBasicMaterial({
         color: 0xff0000
     })
-    
+
     var marker = new THREE.Mesh(geometry, material)
 
     scene.add(marker)
 }
 
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000)
-camera.position.z = 10
-
-var light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1)
-scene.add(light)
-
-var renderer = new THREE.WebGLRenderer()
-renderer.setSize(window.innerWidth, window.innerHeight)
-document.body.appendChild(renderer.domElement)
+createLights()
 
 createClock()
 
@@ -83,9 +114,9 @@ const setHandsRotationAngleFromTime = () => {
         minutesAngleMultiplier = 6,
         secondsAngleMultiplier = 6
 
-    hoursHand.rotation.z = -THREE.Math.degToRad(hours12Format * hoursAngleMultiplier + minutes / 2)
-    minutesHand.rotation.z = -THREE.Math.degToRad(minutes * minutesAngleMultiplier + seconds * 0.1)
-    secondsHand.rotation.z = -THREE.Math.degToRad(seconds * secondsAngleMultiplier + milliSeconds * 0.006)
+    hoursHand.pivot.rotation.z = -THREE.Math.degToRad(hours12Format * hoursAngleMultiplier + minutes / 2)
+    secondsHand.pivot.rotation.z = -THREE.Math.degToRad(seconds * secondsAngleMultiplier + milliSeconds * 0.006)
+    minutesHand.pivot.rotation.z = -THREE.Math.degToRad(minutes * minutesAngleMultiplier + seconds * 0.1)
 }
 
 animate()
